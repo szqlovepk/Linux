@@ -1,0 +1,133 @@
+Linux系统CentOS7配置：
+
+先将事先准备好的jdk和tomcat的压缩包通过winSC放在/usr/local/software下面
+
+
+----------------------------------------------------------安装jdk
+
+进入software目录，命令行：
+cd /usr/local/software
+
+解压压缩包，命令行：
+tar xvf jdk-7u76-linux-x64.tar.gz
+
+然后可以删除压缩包，命令行：
+rm -rf xvf jdk-7u76-linux-x64.tar.gz
+
+设置jdk环境变量,命令行：
+vi /etc/profile
+
+在末尾添加：
+export JAVA_HOME=/usr/local/software/jdk1.7.0_76
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export PATH=$PATH:$JAVA_HOME/bin
+
+shift+z+z 保存退出
+
+使profile生效，命令行：
+source /etc/profile
+
+java -version检查是否安装成功
+
+java version "1.7.0_76"
+Java(TM) SE Runtime Environment (build 1.7.0_76-b13)
+Java HotSpot(TM) 64-Bit Server VM (build 24.76-b04, mixed mode)
+
+
+----------------------------------------------------------安装tomcat
+
+解压压缩包，命令行：
+tar xvf apache-tomcat-7.0.29.tar.gz
+
+然后可以删除压缩包，命令行：
+rm -rf apache-tomcat-7.0.29.tar.gz
+
+启动tomcat，命令行：
+/usr/local/software/apache-tomcat-7.0.29/bin/startup.sh 
+
+Using CATALINA_BASE:   /usr/local/software/apache-tomcat-7.0.29
+Using CATALINA_HOME:   /usr/local/software/apache-tomcat-7.0.29
+Using CATALINA_TMPDIR: /usr/local/software/apache-tomcat-7.0.29/temp
+Using JRE_HOME:        /usr/local/software/jdk1.7.0_76
+Using CLASSPATH:       /usr/local/software/apache-tomcat-7.0.29/bin/bootstrap.jar:/usr/local/software/apache-tomcat-7.0.29/bin/tomcat-juli.jar
+
+
+停止Tomcat,命令行:
+/usr/local/software/apache-tomcat-7.0.29/bin/shutdown.sh 
+
+查看tomcat进程，命令行：
+ps -ef|grep tomcat
+
+开放8080端口，命令行：
+firewall-cmd --zone=public --add-port=8080/tcp --permanent
+
+--zone #作用域
+
+--add-port=8080/tcp #添加端口，格式为：端口/通讯协议
+
+--permanent #永久生效，没有此参数重启后失效
+
+重启防火墙，命令行：
+firewall-cmd --reload
+
+查看已经开放的端口：
+firewall-cmd --list-ports
+
+查询防火墙状态：
+firewall-cmd --state
+
+关闭防火墙：
+systemctl stop firewalld.service
+
+开启防火墙：
+systemctl start firewalld.service
+
+结束所有的java进程：
+ps -e|grep java|awk '{print "kill -9 "$1}'|sh
+
+
+----------------------------------------------------------安装mysql
+
+官网下载：
+# wget http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
+# rpm -ivh mysql-community-release-el7-5.noarch.rpm
+# yum install mysql-community-server
+
+mysql是否安装好：
+#whereis mysql
+# yum list installed | grep mysql
+
+
+成功安装之后重启mysql服务 ：	
+# service mysqld restart
+
+mysql命令：
+mysql -u root mysql 
+进入mysql后执行：
+UPDATE user SET password=PASSWORD('123456') WHERE user='root'; 
+flush privileges;//记得要执行这句话，否则如果关闭先前的终端，又出现原来的错误 
+exit;  
+
+在mysql控制台下修改权限：
+grant all privileges on *.* to 'root'@'%' identified by '123456' with grant option;  //root 是用户名，% 表示任意主机，'123456' 指定的登录密码（这个和本地的root密码可以设置不同，互不影响）  
+flush privileges; //重载系统权限  
+exit;//退出mysql控制台  
+
+
+开放3306端口，命令行：
+firewall-cmd --zone=public --add-port=8080/tcp --permanent
+
+重启防火墙，命令行：
+firewall-cmd --reload
+
+查看已经开放的端口：
+firewall-cmd --list-ports
+
+
+
+----------------------------------------------------------修改server.xml 通过域名访问
+
+<Host name="www.szqlovepk.club" appBase="webapps" unpackWARs="true"
+    autoDeploy="true" xmlValidation="false" xmlNamespaceAware="false">
+    <Context docBase="LoveOnly" path="" reloadable="true" />      
+</Host>
