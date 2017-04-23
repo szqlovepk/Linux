@@ -1,0 +1,114 @@
+Linux系统Ubuntu配置：
+
+账号ubuntu
+
+先将事先准备好的jdk和tomcat的压缩包通过winSC放在/home/ubuntu/software下面
+
+--切换成超级管理员
+sudo passwd root
+su
+通过 cp -a 将home目录下的压缩包复制到/usr/local下
+
+
+----------------------------------------------------------安装jdk
+
+解压压缩包，命令行：
+tar xvf jdk-7u76-linux-x64.tar.gz
+
+然后可以删除压缩包，命令行：
+rm -rf xvf jdk-7u76-linux-x64.tar.gz
+
+设置jdk环境变量,命令行：
+vi /etc/profile
+
+在末尾添加：
+export JAVA_HOME=/usr/local/jdk1.7.0_76
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export PATH=$PATH:$JAVA_HOME/bin
+
+shift+z+z 保存退出
+
+使profile生效，命令行：
+source /etc/profile
+
+java -version检查是否安装成功
+
+java version "1.7.0_76"
+Java(TM) SE Runtime Environment (build 1.7.0_76-b13)
+Java HotSpot(TM) 64-Bit Server VM (build 24.76-b04, mixed mode)
+
+
+----------------------------------------------------------安装tomcat
+
+解压压缩包，命令行：
+tar xvf apache-tomcat-7.0.29.tar.gz
+
+然后可以删除压缩包，命令行：
+rm -rf apache-tomcat-7.0.29.tar.gz
+
+启动tomcat，命令行：
+/usr/local/apache-tomcat-7.0.29/bin/startup.sh 
+
+Using CATALINA_BASE:   /usr/local/apache-tomcat-7.0.29
+Using CATALINA_HOME:   /usr/local/apache-tomcat-7.0.29
+Using CATALINA_TMPDIR: /usr/local/apache-tomcat-7.0.29/temp
+Using JRE_HOME:        /usr/local/jdk1.7.0_76
+Using CLASSPATH:       /usr/local/apache-tomcat-7.0.29/bin/bootstrap.jar:/usr/local/apache-tomcat-7.0.29/bin/tomcat-juli.jar
+
+
+停止Tomcat,命令行:
+/usr/local/apache-tomcat-7.0.29/bin/shutdown.sh 
+
+查看tomcat进程，命令行：
+ps -ef|grep tomcat
+
+
+结束所有的java进程：
+ps -e|grep java|awk '{print "kill -9 "$1}'|sh
+
+
+----------------------------------------------------------安装mysql
+
+apt-get install MySQL-server 安装过程中输入root账户的密码
+
+检测MySQL是否正在运行：
+netstat -tap | grep mysql
+
+MySQL监听3306端口的是本机ip，此时拒绝其他ip的访问。此时需要配置my.cnf 文件，设置'bind-address'为本机ip或者注释掉相关语句，命令为：
+vi /etc/mysql/my.cnf
+注释bind-address：127.0.0.1
+
+登录mysql，输入命令后根据提示输入密码即可：
+mysql -u root -p
+
+赋予root用户所有权限：
+grant all on *.* to root@'%' identified by '123456'; 
+
+重载系统权限：
+flush privileges; 
+
+此时退出mysql:
+exit
+
+重启mysql服务:
+restart mysql 
+
+
+----------------------------------------------------------卸载mysql
+删除mysql:
+
+apt-get autoremove --purge mysql-server-5.5
+
+apt-get remove mysql-common
+
+清理残留数据:
+
+dpkg -l |grep ^rc|awk '{print $2}' |sudo xargs dpkg -P
+
+
+----------------------------------------------------------修改server.xml 通过域名访问
+
+<Host name="www.szqlovepk.club" appBase="webapps" unpackWARs="true"
+    autoDeploy="true" xmlValidation="false" xmlNamespaceAware="false">
+    <Context docBase="LoveOnly" path="" reloadable="true" />      
+</Host>
